@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Booking</title>
+    <link href="index.css" rel="stylesheet">
+</head>
+<body>
+    <main class="main">
+        <h2 class="product-head">YAY! It's BOGO</h2>
+        <div class="product-area">
+
+        </div>
+        <div class="total-area">
+            <label style="color: #ff6b82">Free Delivery</label>
+            <label style="float: right;">Total: <strong>$<span class="total-sum">0</span> USD</strong></label>
+        </div>
+        <button class="btn"><strong>+</strong> Add to Cart</button>
+        <p style="color: #bdbbbb; text-align: center;">Powered by <strong style="color: #f73b57">Pumber</p>     
+    </main>
+    <script>
+        const offers = [
+            { id: 1, offer: '30%', deal: "Buy 1 Get 2", amt: '18.00', offAmt: '10.00', mostPopular: false },
+            { id: 2,offer: '30%', deal: "Buy 2 Get 4", amt: '24.00', offAmt: '10.00', mostPopular: true },
+            { id: 3, offer: '10%', deal: "Buy 3 Get 6", amt: '36.00', offAmt: '10.00', mostPopular: false }
+        ]; // decalre a variable to create the content dynamically.
+
+        const pdiv = document.getElementsByClassName('product-area');
+
+        offers.forEach((offer, index) => {
+            const cardDiv = document.createElement('div'); //Creating a div for normal and expanded sort screen.
+            cardDiv.className = 'card';
+
+            let ndiv = document.createElement('div'); // Normal sortscreen div and adding the html.
+            ndiv.className = 'normal-view';
+            ndiv.innerHTML = `
+                                <div class="left">
+                                    <h2>${offer.offer}</h2>
+                                </div>
+                                <div class="right">
+                                    <input type="radio" name="offer" value=${offer.id} />
+                                    <div class="right-div">
+                                            <span>${offer.deal}</span>
+                                            <span><strong>$${offer.amt} USD</strong></span>
+                                    </div>
+                                    <div class="most-pop ${!offer.mostPopular? 'hidden': ''}">Most Popular</div>
+                                </div>                         
+                            `;
+            
+            cardDiv.appendChild(ndiv);
+
+            let ediv = document.createElement('div'); // Normal sortscreen div and adding the html.
+            ediv.className = 'expand-view';
+                            
+            let rows = `<div class="row">
+                            <div class="row-heading"></div>
+                            <div style="flex: 1; text-align: center;">Size</div>
+                            <div style="flex: 1; text-align: center;">Color</div>
+                        </div>`;
+            for (let i = 1; i <= (index + 1); i++) { //To create the dropdown based on buy options.
+                rows += `
+                    <div class="row">
+                        <div class="row-heading">#${i}</div>
+                        <select class="product-size">
+                            <option>S</option>
+                            <option>M</option>
+                            <option>L</option>
+                        </select>
+                        <select class="product-clr">
+                            <option>Color</option>
+                            <option>Red</option>
+                            <option>Blue</option>
+                            <option>Green</option>
+                        </select>
+                    </div>
+                `;
+            }
+
+            ediv.innerHTML = `<div>
+                                <div class="exp-offer">
+                                    <input type="radio" name="offer" value=${offer.id} />
+                                    <div>
+                                            <span>${offer.deal}</span>
+                                            <span><strong>$${offer.amt} USD</strong></span>
+                                    </div>
+                                    <div>
+                                            <span class="exp-span-offer">${offer.offer} Off</span>
+                                            <span class="exp-span-amt">$${offer.offAmt} USD</span>
+                                    </div>
+                                </div>
+                                ${rows}
+                            </div>
+                            <div class="most-pop ${!offer.mostPopular? 'hidden': ''}">Most Popular</div>
+                            `;
+            cardDiv.appendChild(ediv);
+
+            cardDiv.addEventListener('click', function(event) { // Click event of normal and expanded sort screen to switch.
+                const target = event?.target;
+                if (target?.tagName === 'INPUT' && target?.type === 'radio' || target?.tagName === 'SELECT') { // if clicked on radio, select or input element then the ignore the switch.
+                    return; 
+                }
+
+                let cardDivs = document.querySelectorAll('.card'), 
+                    isAlreadyExpanded = cardDiv.classList.contains('expanded');
+                
+                cardDivs.forEach(div => { div.classList.remove('expanded'); });
+            
+                if (!isAlreadyExpanded) {
+                    cardDiv.classList.add('expanded');
+                    let expandedRadioButton = cardDiv.querySelector('.expand-view input[type="radio"]');
+                    if (expandedRadioButton) {
+                        expandedRadioButton.checked = true;
+                        expandedRadioButton.dispatchEvent(new Event('change'));
+                    }
+                }
+                else {
+                    let normalRadioButton = cardDiv.querySelector('.normal-view input[type="radio"]');
+                    if (normalRadioButton) {
+                        normalRadioButton.checked = true;
+                        normalRadioButton.dispatchEvent(new Event('change'));
+                    }
+                }
+            });
+
+            pdiv[0].appendChild(cardDiv);
+            
+        });
+
+        document.addEventListener('DOMContentLoaded', function() { // Events added after DOM load
+            let radioButtons = document.querySelectorAll('input[type="radio"]');
+            radioButtons.forEach(function(radio) {
+                radio.addEventListener('change', function(event) { //Radio button change event.
+                    let amt = offers.filter((x) => { return x.id == event.target.value })[0]?.amt,
+                        spanel = document.getElementsByClassName('total-sum');
+
+                    if (amt && spanel[0]) spanel[0].innerHTML = amt;
+                    else spanel[0].innerHTML = 0;
+                });
+            });
+
+            let btn = document.getElementsByClassName('btn')[0];
+            btn.addEventListener('click', function(event) { //Button click event.
+                let selectedRadioButton = document.querySelector('input[type="radio"]:checked');
+        
+                if (!selectedRadioButton) {
+                    return;
+                }
+
+                let cardDiv = selectedRadioButton.closest('.card'),
+                    productClrSelect = cardDiv.querySelectorAll('.expand-view .product-clr'), valid = true;
+
+                productClrSelect.forEach((clr) => {
+                    if (clr.value == 'Color') valid = false;
+                });
+
+                if (valid) alert("Your purchase is successful!");
+                else alert("Please select the products!");
+            });
+        });
+    </script>
+</body>
+</html>
